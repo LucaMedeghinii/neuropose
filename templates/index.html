@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>NeuroPose - Scelta iniziale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(120deg, #f3f6fb 60%, #e3e7ef 100%);
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            min-width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        header {
+            padding: 3vw 2vw 1vw 2vw;
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            margin-bottom: 12px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.4rem;
+            background: linear-gradient(90deg, #3a8dde, #a259c4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        p.subtitle {
+            color: #5f6f81;
+            font-size: 1.08rem;
+            margin-top: 8px;
+        }
+        .content-box {
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(58, 141, 222, 0.12), 0 1.5px 8px 0 rgba(162, 89, 196, 0.08);
+            padding: 2.5vw 2vw 2vw 2vw;
+            margin: 2vw auto 1vw auto;
+            max-width: 620px;
+            width: 96vw;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .content-box p {
+            color: #4c5a6a;
+            font-size: 1.04rem;
+            margin-bottom: 2vw;
+        }
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.2vw;
+            width: 100%;
+        }
+        .neumorphic-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+            height: 58px;
+            margin: 10px 8px;
+            border-radius: 40px;
+            background: linear-gradient(90deg, #3a8dde 0%, #a259c4 100%);
+            box-shadow: 0 4px 16px #d1d9e6, 0 -4px 16px #ffffff;
+            color: #fff;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.18rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.18s, box-shadow 0.18s;
+            padding: 0 28px;
+            gap: 10px;
+        }
+        .neumorphic-btn:hover,
+        .neumorphic-btn:focus {
+            transform: scale(1.05);
+            box-shadow: 0 0 16px 3px #a259c488;
+            outline: none;
+        }
+        .button-icon {
+            width: 26px;
+            height: 26px;
+            margin-right: 10px;
+        }
+        footer {
+            padding: 1.5vw 2vw 1vw 2vw;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #8892a5;
+            width: 100%;
+            margin-top: auto;
+        }
+        @media (max-width: 700px) {
+            header { padding: 5vw 2vw 2vw 2vw; }
+            .logo { width: 60px; }
+            h1 { font-size: 1.6rem; }
+            .content-box {
+                padding: 6vw 2vw 3vw 2vw;
+                max-width: 99vw;
+                border-radius: 14px;
+            }
+            .neumorphic-btn {
+                font-size: 1rem;
+                min-width: 120px;
+                height: 44px;
+                padding: 0 14px;
+            }
+            .button-icon {
+                width: 18px;
+                height: 18px;
+                margin-right: 7px;
+            }
+            .btn-container { gap: 2vw; }
+            footer { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://img.icons8.com/fluency/96/artificial-intelligence.png" alt="Logo" class="logo">
+        <h1>NeuroPose</h1>
+        <p class="subtitle">Tecnologia al servizio della postura</p>
+    </header>
+    <div class="content-box">
+        <p>
+            Scegli come vuoi iniziare: puoi scattare un'immagine tramite webcam oppure caricare una foto esistente. NeuroPose analizzerà la postura in modo rapido e intelligente.
+        </p>
+        <div class="btn-container">
+            <form action="/webcam" method="get" style="display:inline;">
+                <button type="submit" class="neumorphic-btn">
+                    <img src="https://img.icons8.com/ios-filled/50/video-call.png" alt="Webcam" class="button-icon">
+                    Webcam
+                </button>
+            </form>
+            <form action="/3dpose" method="get" style="display:inline;">
+                <button type="submit" class="neumorphic-btn">
+                    <img src="https://img.icons8.com/?size=100&id=PpSpjvDCf7y3&format=png&color=000000" alt="3D Pose" class="button-icon">
+                    3D Pose
+                </button>
+            </form>
+            <form action="/upload" method="get" style="display:inline;">
+                <button type="submit" class="neumorphic-btn">
+                    <img src="https://img.icons8.com/ios-filled/50/upload.png" alt="Upload" class="button-icon">
+                    Carica Immagine
+                </button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        &copy; 2025 NeuroPose. Tutti i diritti riservati.
+    </footer>
+</body>
+</html>
