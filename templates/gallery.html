@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Galleria Screenshot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Roboto', Arial, sans-serif; 
+            background: #f3f6fb; 
+            margin: 0; 
+            padding: 0; 
+            text-align: center;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 40px auto; 
+            background: #fff; 
+            border-radius: 24px; 
+            box-shadow: 0 4px 24px rgba(58, 141, 222, 0.13); 
+            padding: 24px; 
+        }
+        h2 { 
+            color: #3a8dde; 
+            font-family: 'Montserrat', Arial, sans-serif; 
+            text-align: center;
+        }
+        .gallery { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 18px; 
+            justify-content: center;
+        }
+        .gallery-item { 
+            background: #e3e7ef; 
+            border-radius: 12px; 
+            padding: 10px; 
+            box-shadow: 0 2px 8px rgba(58, 141, 222, 0.08); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center;
+        }
+        img { 
+            max-width: 220px; 
+            border-radius: 8px; 
+            display: block; 
+            margin-bottom: 8px;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(58, 141, 222, 0.10);
+        }
+        .meta { 
+            font-size: 0.92em; 
+            color: #888; 
+            margin-top: 4px; 
+            text-align: center;
+        }
+        .back-link, .webcam-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #a259c4;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.12rem;
+            text-decoration: underline;
+            transition: color 0.18s;
+            text-align: center;
+        }
+        .back-link:hover, .webcam-link:hover {
+            color: #3a8dde;
+        }
+        .delete-btn {
+            margin-top: 6px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: none;
+            background-color: #a259c4;
+            color: white;
+            cursor: pointer;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1em;
+            transition: background 0.18s;
+        }
+        .delete-btn:hover {
+            background-color: #3a8dde;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Galleria Screenshot</h2>
+        {% if images %}
+        <div class="gallery">
+            {% for img in images %}
+                <div class="gallery-item">
+                    <img src="{{ url_for('uploaded_file', user_id=user_id, filename=img) }}" alt="Screenshot">
+                    <div class="meta">{{ img }}</div>
+                    <form method="post" action="{{ url_for('delete_screenshot') }}" onsubmit="return confirm('Sei sicuro di voler cancellare questa immagine?');">
+                        <input type="hidden" name="filename" value="{{ img }}">
+                        <button type="submit" class="delete-btn">Cancella</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>Nessuno screenshot salvato in questa sessione.</p>
+        {% endif %}
+        <a href="{{ url_for('webcam') }}" class="webcam-link">Torna alla webcam</a>
+        <br>
+        <a href="{{ url_for('index') }}" class="back-link">Torna alla home</a>
+    </div>
+</body>
+</html>

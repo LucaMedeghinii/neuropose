@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Webcam Postura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; background: #f3f6fb; }
+        body {
+            min-height: 100vh; min-width: 100vw;
+            font-family: 'Roboto', Arial, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 32px;
+            width: 100vw;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .feedback-panel, .schema-panel {
+            width: 320px;
+            min-width: 220px;
+            max-width: 340px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(58, 141, 222, 0.09);
+            padding: 22px 18px;
+            margin-top: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .feedback-title {
+            color: #3a8dde;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+        .feedback-text {
+            color: #444;
+            font-size: 1.1rem;
+            text-align: left;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        .schema-img {
+            max-width: 220px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(58,141,222,0.10);
+            margin-bottom: 12px;
+        }
+        .schema-title {
+            color: #3a8dde;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+        .schema-text {
+            color: #888;
+            font-size: 1em;
+            font-family: 'Montserrat',Arial,sans-serif;
+            text-align: center;
+        }
+        .webcam-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .video-container {
+            width: 680px;
+            max-width: 90vw;
+            aspect-ratio: 16 / 9;
+            background: #e3e7ef;
+            border-radius: 22px;
+            box-shadow: 0 4px 32px rgba(58, 141, 222, 0.15);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #videoStream {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            border-radius: 22px; border: 3px solid #f3f6fb; background: #e3e7ef;
+        }
+        .mode-btn-group { display: flex; justify-content: center; gap: 1vw; margin: 18px 0 0 0; flex-wrap: wrap; }
+        .mode-btn {
+            min-width: 120px; height: 48px; border-radius: 18px; border: none;
+            background: #e3e7ef; color: #3a8dde;
+            font-family: 'Montserrat', Arial, sans-serif; font-size: 1.08rem; font-weight: 700;
+            cursor: pointer; transition: background 0.18s, color 0.18s; padding: 0 24px; margin-bottom: 8px;
+            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .mode-btn.selected, .mode-btn:focus { background: #3a8dde; color: #fff; }
+        .back-link { display: block; margin-top: 2vw; color: #a259c4; font-family: 'Montserrat', Arial, sans-serif; font-size: 1.12rem; text-decoration: underline; transition: color 0.18s; }
+        .back-link:hover { color: #3a8dde; }
+        @media (max-width: 1200px) {
+            .main-layout { flex-direction: column; align-items: center; gap: 12px; }
+            .feedback-panel, .schema-panel { margin-top: 12px; }
+            .video-container { width: 98vw; max-width: 98vw; }
+        }
+        @media (max-width: 700px) {
+            .video-container { aspect-ratio: 4 / 3; }
+            .feedback-panel, .schema-panel, .video-container { width: 98vw; max-width: 98vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <!-- Feedback a sinistra -->
+        <div class="feedback-panel">
+            <div class="feedback-title">Feedback</div>
+            <div class="feedback-text" id="postureFeedback">
+                Attendi analisi...
+            </div>
+        </div>
+        <!-- Webcam centrale -->
+        <div class="webcam-panel">
+            <h2>Webcam</h2>
+            <form method="get" id="modeForm">
+                <div class="mode-btn-group">
+                    <button type="submit" name="mode" value="pose" class="mode-btn{% if mode == 'pose' %} selected{% endif %}">Pose</button>
+                    <button type="submit" name="mode" value="face" class="mode-btn{% if mode == 'face' %} selected{% endif %}">Face</button>
+                    <button type="submit" name="mode" value="hands" class="mode-btn{% if mode == 'hands' %} selected{% endif %}">Hands</button>
+                </div>
+            </form>
+            <div class="video-container" style="margin-top:18px;">
+                <img src="{{ url_for('video_feed', mode=mode, show_face='1' if show_face else '0') }}" id="videoStream" alt="Webcam">
+            </div>
+            <div class="mode-btn-group" style="margin-top:20px;">
+                <button id="screenshotBtn" class="mode-btn" type="button">Screenshot</button>
+                <a href="{{ url_for('gallery') }}" class="mode-btn">Galleria</a>
+            </div>
+            <a href="{{ url_for('index') }}" class="back-link">Torna alla home</a>
+        </div>
+        <!-- Schema e consigli a destra -->
+        <div class="schema-panel">
+            {% if mode == 'pose' %}
+                <b>Consiglio:</b> Mantieni la testa dritta, le spalle alla stessa altezza e la schiena perpendicolare rispetto al bacino.<br>
+                Se la linea tra spalle è rossa, raddrizza la schiena!
+            {% elif mode == 'face' %}
+                <b>Consiglio:</b> Mantieni lo sguardo dritto e la testa in posizione neutra per una postura corretta.<br>
+                Evita di inclinare o ruotare troppo la testa.
+            {% elif mode == 'hands' %}
+                <b>Consiglio:</b> Mantieni il polso allineato con la mano per prevenire stress e affaticamento.<br>
+                Evita posizioni innaturali o piegamenti eccessivi.
+            {% else %}
+                <b>Consiglio:</b> Seleziona una modalità per visualizzare i consigli specifici.
+            {% endif %}
+        </div>
+    </div>
+    <script>
+    // Screenshot
+    document.getElementById('screenshotBtn').addEventListener('click', function() {
+        const img = document.getElementById('videoStream');
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL('image/jpeg');
+        fetch('/save_screenshot', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ image: dataURL, mode: "{{ mode }}" })
+        })
+        .then(response => response.json())
+        .then(data => { alert(data.message || 'Screenshot salvato!'); });
+    });
+
+    // Aggiorna feedback postura ogni secondo
+    function updatePostureFeedback() {
+        fetch('/posture_feedback')
+            .then(response => response.json())
+            .then(function(data) {
+                document.getElementById('postureFeedback').textContent = data.feedback || 'Attendi analisi...';
+            })
+            .catch(function() {
+                document.getElementById('postureFeedback').textContent = 'Attendi analisi...';
+            });
+    }
+    setInterval(updatePostureFeedback, 1000);
+    </script>
+</body>
+</html>

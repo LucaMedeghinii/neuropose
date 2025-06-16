@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Pose Detection (BlazePose GHUM)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow:hidden;
+            background: linear-gradient(120deg, #f3f6fb 60%, #e3e7ef 100%);
+        }
+        body {
+            min-height: 100vh;
+            min-width: 100vw;
+            font-family: 'Roboto', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        h2 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #3a8dde;
+            margin-top: 1vh;
+            margin-bottom: 1vh;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .container {
+            background: #fff;
+            padding: 2.5vw 2vw;
+            border-radius: 28px;
+            box-shadow: 0 8px 32px 0 rgba(58, 141, 222, 0.12), 0 1.5px 8px 0 rgba(162, 89, 196, 0.08);
+            max-width: 98vw;
+            width: 100%;
+            max-height:70vh;
+            margin: 0 auto 2vw auto;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 3vw;
+            box-sizing: border-box;
+        }
+        .canvas-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #output2d, #output3d {
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(58, 141, 222, 0.19);
+            background: #e3e7ef;
+            border: 2px solid #f3f6fb;
+            transition: box-shadow 0.18s;
+            max-width: 100%;
+            max-height: 50vh;
+            height: auto;
+        }
+        #output2d {
+            width: 48vw;
+            max-width: 640px;
+            aspect-ratio: 4 / 3;
+        }
+        #output3d {
+            width: 48vw !important;
+            max-width: 640px !important;
+            aspect-ratio: 4 / 3 !important;
+            margin-top: 0;
+        }
+        .canvas-label {
+            margin-top: 12px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: #3a8dde;
+        }
+        .canvas-block:last-child .canvas-label {
+            color: #a259c4;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 2vw;
+            color: #a259c4;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.12rem;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #3a8dde;
+        }
+        .feedback-panel {
+            width: 380px; background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(58, 141, 222, 0.09);
+            padding: 18px; margin: 24px auto 0 auto; font-size: 1.1em; text-align: center;
+            font-size: 0.9em;
+            max-height: 6vh;
+            overflow: hidden;
+        }
+        @media (max-width: 1100px) {
+            .container {
+                flex-direction: column;
+                gap: 2vw;
+                padding: 2vw 2vw;
+                max-width: 99vw;
+                max-height: none;
+            }
+            #output2d, #output3d {
+                width: 95vw;
+                max-width: 98vw;
+            }
+            #output2d {
+                aspect-ratio: 4 / 3;
+            }
+            #output3d {
+                aspect-ratio: 1 / 1;
+            }
+        }
+        @media (max-width: 700px) {
+            h2 {
+                font-size: 1.3rem;
+                margin-top: 4vw;
+            }
+            .container {
+                padding: 2vw 1vw;
+                border-radius: 18px;
+            }
+            #output2d, #output3d {
+                width: 98vw;
+                max-width: 98vw;
+            }
+        }
+    </style>
+    <!-- TensorFlow.js e BlazePose GHUM -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+</head>
+<body>
+    <h2>3D Pose Detection</h2>
+    <div class="feedback-panel" id="symmetryFeedback">Analisi simmetria in corso...</div>
+    <div class="container">
+        <div class="canvas-block">
+            <canvas id="output2d" width="640" height="480"></canvas>
+            <div class="canvas-label">Vista Fotocamera</div>
+        </div>
+        <div class="canvas-block">
+            <canvas id="output3d" width="320" height="320"></canvas>
+            <div class="canvas-label">Vista 3D</div>
+        </div>
+    </div>
+    <a href="{{ url_for('index') }}" class="back-link">Torna alla home</a>
+    <script>
+        const COLOR_LEFT = "#00BFFF";
+        const COLOR_RIGHT = "#FFA500";
+        const COLOR_MID = "#222";
+        let video, canvas2d, ctx2d, canvas3d, ctx3d;
+
+        // Indici dei punti chiave per simmetria
+        const LEFT_SHOULDER = 11, RIGHT_SHOULDER = 12, LEFT_HIP = 23, RIGHT_HIP = 24;
+        const SYMMETRY_PAIRS = [
+            [LEFT_SHOULDER, RIGHT_SHOULDER, "Spalle"],
+            [LEFT_HIP, RIGHT_HIP, "Anche"]
+        ];
+        const SYMMETRY_THRESHOLD = 0.02; // Differenza in y normalizzata
+
+        async function setupCamera() {
+            video = document.createElement('video');
+            video.style.display = 'none';
+            document.body.appendChild(video);
+            const stream = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480}});
+            video.srcObject = stream;
+            await new Promise(resolve => video.onloadedmetadata = resolve);
+            video.play();
+            return new Promise(resolve => {
+                video.onplaying = () => resolve(video);
+            });
+        }
+
+        function draw2DPose(ctx, keypoints) {
+            const edges = [
+                [11, 13], [13, 15], [15, 17], [15, 19], [15, 21], [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
+                [11, 23], [12, 24], [23, 24], [23,25], [24,26], [25,27], [26,28], [27,29], [28,30], [29,31], [30,32],
+                [11,12], [12,14], [11,13], [23,24], [11,12], [0,1], [1,2], [2,3], [3,7], [0,4], [4,5], [5,6], [6,8]
+            ];
+            for (const [i, j] of edges) {
+                if (keypoints[i] && keypoints[j] && keypoints[i].score > 0.3 && keypoints[j].score > 0.3) {
+                    ctx.beginPath();
+                    ctx.moveTo(keypoints[i].x, keypoints[i].y);
+                    ctx.lineTo(keypoints[j].x, keypoints[j].y);
+                    if ([11,13,15,17,19,21,23,25,27,29,31].includes(i)) ctx.strokeStyle = COLOR_LEFT;
+                    else if ([12,14,16,18,20,22,24,26,28,30,32].includes(i)) ctx.strokeStyle = COLOR_RIGHT;
+                    else ctx.strokeStyle = COLOR_MID;
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                }
+            }
+            for (const [i, kp] of keypoints.entries()) {
+                if (kp && kp.score > 0.3) {
+                    ctx.beginPath();
+                    ctx.arc(kp.x, kp.y, 6, 0, 2 * Math.PI);
+                    if ([11,13,15,17,19,21,23,25,27,29,31].includes(i)) ctx.fillStyle = COLOR_LEFT;
+                    else if ([12,14,16,18,20,22,24,26,28,30,32].includes(i)) ctx.fillStyle = COLOR_RIGHT;
+                    else ctx.fillStyle = COLOR_MID;
+                    ctx.fill();
+                }
+            }
+        }
+
+        function draw3DPose(ctx, keypoints3D, feedbackCallback) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            if (!keypoints3D) return;
+            const scale = 140;
+            const offsetX = ctx.canvas.width / 2;
+            const offsetY = ctx.canvas.height / 2 + 30;
+            let angleY = Math.PI / 6; // 30°
+            const cosY = Math.cos(angleY);
+            const sinY = Math.sin(angleY);
+
+            function rotateY(pt) {
+                return {
+                    x: pt.x * cosY - pt.z * sinY,
+                    y: pt.y,
+                    z: pt.x * sinY + pt.z * cosY
+                };
+            }
+
+            const edges = [
+                [11, 13], [13, 15], [15, 17], [15, 19], [15, 21], [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
+                [11, 23], [12, 24], [23, 24], [23,25], [24,26], [25,27], [26,28], [27,29], [28,30], [29,31], [30,32],
+                [11,12], [12,14], [11,13], [23,24], [11,12], [0,1], [1,2], [2,3], [3,7], [0,4], [4,5], [5,6], [6,8]
+            ];
+
+            // Simmetria: linee speciali tra spalle e tra anche
+            let symmetryFeedback = [];
+            for (const [i, j, label] of SYMMETRY_PAIRS) {
+                const kp1 = keypoints3D[i], kp2 = keypoints3D[j];
+                if (kp1 && kp2) {
+                    const diff = Math.abs(kp1.y - kp2.y);
+                    const color = (diff < SYMMETRY_THRESHOLD) ? "#2ecc40" : "#e74c3c";
+                    ctx.beginPath();
+                    const p1 = rotateY(kp1);
+                    const p2 = rotateY(kp2);
+                    ctx.moveTo(offsetX + p1.z * scale, offsetY + p1.y * scale);
+                    ctx.lineTo(offsetX + p2.z * scale, offsetY + p2.y * scale);
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 8;
+                    ctx.stroke();
+                    if (diff < SYMMETRY_THRESHOLD) {
+                        symmetryFeedback.push(`✔ ${label} allineate`);
+                    } else {
+                        symmetryFeedback.push(`❗ ${label} NON allineate`);
+                    }
+                }
+            }
+            if (feedbackCallback) feedbackCallback(symmetryFeedback);
+
+            // Disegna tutte le altre ossa
+            for (const [i, j] of edges) {
+                if (keypoints3D[i] && keypoints3D[j]) {
+                    const p1 = rotateY(keypoints3D[i]);
+                    const p2 = rotateY(keypoints3D[j]);
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX + p1.z * scale, offsetY + p1.y * scale);
+                    ctx.lineTo(offsetX + p2.z * scale, offsetY + p2.y * scale);
+                    if ([11,13,15,17,19,21,23,25,27,29,31].includes(i)) ctx.strokeStyle = COLOR_LEFT;
+                    else if ([12,14,16,18,20,22,24,26,28,30,32].includes(i)) ctx.strokeStyle = COLOR_RIGHT;
+                    else ctx.strokeStyle = COLOR_MID;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+            // Disegna tutti i punti
+            for (const [i, kp] of keypoints3D.entries()) {
+                if (kp) {
+                    const p = rotateY(kp);
+                    ctx.beginPath();
+                    ctx.arc(offsetX + p.z * scale, offsetY + p.y * scale, 5, 0, 2 * Math.PI);
+                    if ([11,13,15,17,19,21,23,25,27,29,31].includes(i)) ctx.fillStyle = COLOR_LEFT;
+                    else if ([12,14,16,18,20,22,24,26,28,30,32].includes(i)) ctx.fillStyle = COLOR_RIGHT;
+                    else ctx.fillStyle = COLOR_MID;
+                    ctx.fill();
+                }
+            }
+        }
+
+        async function run() {
+            await setupCamera();
+            canvas2d = document.getElementById('output2d');
+            ctx2d = canvas2d.getContext('2d');
+            canvas2d.width = video.videoWidth;
+            canvas2d.height = video.videoHeight;
+            canvas3d = document.getElementById('output3d');
+            ctx3d = canvas3d.getContext('2d');
+
+            const model = poseDetection.SupportedModels.BlazePose;
+            const detectorConfig = {
+                runtime: 'mediapipe',
+                modelType: 'full',
+                solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose'
+            };
+            const detector = await poseDetection.createDetector(model, detectorConfig);
+
+            async function render() {
+                ctx2d.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                const poses = await detector.estimatePoses(video, {maxPoses: 1, flipHorizontal: false});
+                if (poses.length > 0) {
+                    draw2DPose(ctx2d, poses[0].keypoints);
+                    draw3DPose(ctx3d, poses[0].keypoints3D, function(feedbackArr) {
+                        document.getElementById('symmetryFeedback').innerHTML = feedbackArr.join('<br>');
+                    });
+                } else {
+                    ctx3d.clearRect(0, 0, canvas3d.width, canvas3d.height);
+                    document.getElementById('symmetryFeedback').innerHTML = "Analisi simmetria in corso...";
+                }
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+        run();
+    </script>
+</body>
+</html>

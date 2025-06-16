@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Carica Immagine | NeuroPose</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(145deg, #eef2f9, #dbe5f1);
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5vw;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 3.5vw 4vw 3vw 4vw;
+            border-radius: 24px;
+            box-shadow: 8px 8px 30px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        h2, h3 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            letter-spacing: 1px;
+            margin: 0 0 1.25rem 0;
+        }
+
+        h2 {
+            font-size: 2.4rem;
+            background: linear-gradient(90deg, #3a8dde, #a259c4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #3a8dde;
+            margin-top: 2rem;
+        }
+
+        form {
+            margin-bottom: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        input[type="file"],
+        select {
+            font-size: 1.15rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: #f0f4fa;
+            color: #333;
+            font-family: 'Roboto', Arial, sans-serif;
+            flex: 1 1 220px;
+            max-width: 260px;
+            min-width: 180px;
+            box-sizing: border-box;
+            transition: box-shadow 0.2s ease;
+        }
+
+        input[type="file"]:focus,
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 6px 2px #3a8dde88;
+        }
+
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #3a8dde, #a259c4);
+            color: #fff;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            padding: 14px 36px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex: 1 1 140px;
+            max-width: 180px;
+            min-width: 140px;
+            box-sizing: border-box;
+        }
+
+        button:hover,
+        button:focus {
+            transform: scale(1.06);
+            box-shadow: 0 0 12px 3px #a259c488;
+            outline: none;
+        }
+
+        .result-img {
+            margin-top: 1rem;
+            max-width: 450px;
+            width: 100%;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 2px 16px rgba(162, 89, 196, 0.10);
+            object-fit: contain;
+        }
+
+        .posture-msg {
+            color: #ff4c4c;
+            font-weight: 700;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2.5rem;
+            color: #a259c4;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.15rem;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover,
+        .back-link:focus {
+            color: #3a8dde;
+            outline: none;
+        }
+
+        /* Responsive */
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 2.5rem 2rem 2rem 2rem;
+                max-height: 95vh;
+            }
+            h2 {
+                font-size: 1.8rem;
+            }
+            h3 {
+                font-size: 1.2rem;
+            }
+            form {
+                max-width: 100%;
+                gap: 0.8rem;
+            }
+            input[type="file"],
+            select,
+            button {
+                flex: 1 1 100%;
+                max-width: 100%;
+                min-width: auto;
+                font-size: 1rem;
+                padding: 12px 14px;
+            }
+            .result-img {
+                max-width: 95vw;
+            }
+            .back-link {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" role="main">
+        <h2>Carica un'immagine per l'analisi</h2>
+
+        <form method="post" enctype="multipart/form-data" aria-label="Caricamento immagine per analisi">
+            <input type="file" name="file" required aria-required="true" aria-label="Seleziona file immagine">
+            <select name="mode" aria-label="Seleziona modalità di analisi">
+                <option value="pose" {% if mode == 'pose' %}selected{% endif %}>Pose</option>
+                <option value="face" {% if mode == 'face' %}selected{% endif %}>Face</option>
+                <option value="hands" {% if mode == 'hands' %}selected{% endif %}>Hands</option>
+            </select>
+            <button type="submit">Analizza</button>
+        </form>
+
+        {% if result_img %}
+            <h3>Risultato:</h3>
+            <img src="{{ url_for('static', filename=result_img) }}" alt="Risultato analisi" class="result-img" role="img">
+        {% endif %}
+
+        {% if posture_message %}
+            <div class="posture-msg" role="alert">{{ posture_message }}</div>
+        {% endif %}
+
+        <a class="back-link" href="{{ url_for('index') }}">&larr; Torna al menu</a>
+    </div>
+</body>
+</html>
